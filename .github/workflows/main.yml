@@ -59,8 +59,8 @@ jobs:
       # Step 4: Run the build script
       - name: Run build script
         run: |
-          chmod +x ./scripts/aio_gki_build_kernel_release.sh
-          ./scripts/aio_gki_build_kernel_release.sh
+          chmod +x ./aio_gki_build_kernel_release.sh
+          ./aio_gki_build_kernel_release.sh
 
       # Step 5: Upload build artifacts
       - name: Upload build artifacts
@@ -73,6 +73,6 @@ jobs:
       - name: Create GitHub Release
         run: |
           gh auth login --with-token < ${{ secrets.GITHUB_TOKEN }}
-          ./scripts/create_github_release.sh
+          ./create_github_release.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
