@@ -1,12 +1,7 @@
 name: Build and Release GKI Kernel with KernelSU & SUSFS
 
 on:
-  push:
-    branches:
-      - main  # 或者你希望触发构建的分支
-  pull_request:
-    branches:
-      - main  # 在PR到main时触发
+  workflow_dispatch:
 
 jobs:
   build:
