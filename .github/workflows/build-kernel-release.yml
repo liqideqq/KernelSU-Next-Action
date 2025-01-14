@@ -10,18 +10,8 @@ on:
   #    - main  # Trigger on push to the main branch
   workflow_dispatch:
     inputs:
-      build_a12:
-        description: 'Build Android 12 kernel?'
-        required: true
-        type: boolean
-        default: true
       build_a13:
         description: 'Build Android 13 kernel?'
-        required: true
-        type: boolean
-        default: true
-      build_a14:
-        description: 'Build Android 14 kernel?'
         required: true
         type: boolean
         default: true
@@ -32,28 +22,16 @@ on:
         default: false
 
 jobs:
-  build-kernel-a12:
-    uses: ./.github/workflows/build-kernel-a12.yml
-    secrets: inherit
-    if: ${{ github.event.inputs.build_a12 == 'true' || github.event.inputs.build_a12 == '' }}
-
   build-kernel-a13:
     uses: ./.github/workflows/build-kernel-a13.yml
     secrets: inherit
     if: ${{ github.event.inputs.build_a13 == 'true' || github.event.inputs.build_a13 == '' }}
 
-  build-kernel-a14:
-    uses: ./.github/workflows/build-kernel-a14.yml
-    secrets: inherit
-    if: ${{ github.event.inputs.build_a14 == 'true' || github.event.inputs.build_a14 == '' }}
-
   trigger-release:
     runs-on: ubuntu-latest
     timeout-minutes: 2160  # Set maximum timeout
     needs:
-        - build-kernel-a12
-        - build-kernel-a13
-        - build-kernel-a14  # Ensure the release only runs after the build jobs complete or are skipped
+        - build-kernel-a13 # Ensure the release only runs after the build jobs complete or are skipped
     if: ${{ github.event.inputs.make_release == 'true' }}  # Only run if make_release is true or empty
     env:
       REPO_OWNER: TheWildJames
@@ -149,9 +127,7 @@ jobs:
       # Create placeholder files
       - name: Create Placeholder Files
         run: |
-          echo "This is a placeholder for A12 kernel" > ./downloaded-artifacts/placeholder_a12.txt
           echo "This is a placeholder for A13 kernel" > ./downloaded-artifacts/placeholder_a13.txt
-          echo "This is a placeholder for A14 kernel" > ./downloaded-artifacts/placeholder_a14.txt
 
       # Create GitHub Release and upload files if make_release is true
       - name: Create GitHub Release
