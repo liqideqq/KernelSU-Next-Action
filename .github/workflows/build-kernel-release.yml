@@ -15,6 +15,7 @@ on:
         required: true
         type: boolean
         default: true
+
       make_release:
         description: 'Do you want to create a release?'
         required: true
@@ -26,23 +27,27 @@ jobs:
     uses: ./.github/workflows/build-kernel-a13.yml
     secrets: inherit
     if: ${{ github.event.inputs.build_a13 == 'true' || github.event.inputs.build_a13 == '' }}
+
   trigger-release:
     runs-on: ubuntu-latest
     timeout-minutes: 2160  # Set maximum timeout
     needs:
-        - build-kernel-a13 # Ensure the release only runs after the build jobs complete or are skipped
+        - build-kernel-a13  # Ensure the release only runs after the build jobs complete or are skipped
     if: ${{ github.event.inputs.make_release == 'true' && needs.build-kernel-a12.result == 'success' && needs.build-kernel-a13.result == 'success' && needs.build-kernel-a14.result == 'success' }}
     env:
       REPO_OWNER: TheWildJames
       REPO_NAME: GKI_KernelSU_SUSFS
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      RELEASE_NAME: "*TEST BUILD* GKI Kernels With KernelSU & SUSFS v1.5.3 *TEST BUILD*"
+      RELEASE_NAME: "*TEST BUILD* GKI Kernels With KernelSU Next & SUSFS v1.5.3 *TEST BUILD*"
       RELEASE_NOTES: |
-        This release contains KernelSU and SUSFS v1.5.3
+        This release contains KernelSU Next and SUSFS v1.5.3
+        
         Module: 
         -> https://github.com/sidex15/ksu_module_susfs
+        
         Official Manager:
         -> https://github.com/tiann/KernelSU
+        
         Non-Official Managers:
         -> https://github.com/rifsxd/KernelSU-Next
         -> https://github.com/backslashxx/KernelSU
@@ -94,7 +99,7 @@ jobs:
             # Create the tag in the repository
             git tag $NEW_TAG
             git push origin $NEW_TAG
-            
+
       # Download Artifacts for A13 (Only if A13 Build is successful or input is true or empty)
       - name: Download Artifacts for A13 (Only if A13 Build is successful or skipped)
         if: ${{ needs.build-kernel-a13.result == 'success' }}
