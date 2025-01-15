@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-kernel-a13-kernelsu-susfs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 2160  # Set maximum timeout
 
     steps:
