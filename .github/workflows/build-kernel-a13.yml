@@ -42,11 +42,13 @@ jobs:
             exit 1
           fi
       
-      - name: Install Dependencies
+      - name: Install Repo
         run: |
           # Install dependencies
-            sudo apt update
-            sudo apt install -y lz4 gzip repo perl
+          mkdir -p ./git-repo
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ./git-repo/repo
+          chmod a+rx ./git-repo/repo
+          echo "REPO=$GITHUB_WORKSPACE/./git-repo/repo" >> $GITHUB_ENV
 
       - name: Build for all configurations
         run: |
@@ -75,7 +77,7 @@ jobs:
             
             # Initialize and sync kernel source
             echo "Initializing and syncing kernel source..."
-            repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
+            $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
             REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
             DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
 
@@ -86,8 +88,8 @@ jobs:
             fi
 
             # Sync repo and apply patches
-            repo --version
-            repo --trace sync -c -j$(nproc --all) --no-tags --fail-fast
+            $REPO --version
+            $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
 
             # Add KernelSU, SUSFS patches, and build the kernel
             echo "Adding KernelSU..."
@@ -145,7 +147,7 @@ jobs:
             echo "Running sed commands..."
             sed -i 's/check_defconfig//' ./common/build.config.gki
             sed -i 's/dirty//' ./common/scripts/setlocalversion
-            sed -i '$s|echo "\$res"|echo "\$res Wild+"|' ./common/scripts/setlocalversion
+             sed -i '$s|echo "\$res"|echo "\$res Wild+"|' ./common/scripts/setlocalversion
             perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Sat Apr 20 04:20:00 UTC 2024"}' ./common/scripts/mkcompile_h
 
             # Build the kernel
