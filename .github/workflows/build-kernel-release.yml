@@ -22,8 +22,8 @@ on:
         default: false
 
 jobs:
-  build-kernel-a13:
-    uses: ./.github/workflows/build-kernel-a13.yml
+  build-kernel-a13-5-15:
+    uses: ./.github/workflows/build-kernel-a13-5.15.yml
     secrets: inherit
     if: ${{ github.event.inputs.build_a13 == 'true' || github.event.inputs.build_a13 == '' }}
 
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2160  # Set maximum timeout
     needs:
-        - build-kernel-a13 # Ensure the release only runs after the build jobs complete or are skipped
+        - build-kernel-a13-5-15
     if: ${{ github.event.inputs.make_release == 'true' }}
     env:
       REPO_OWNER: TheWildJames
@@ -99,29 +99,44 @@ jobs:
             git tag $NEW_TAG
             git push origin $NEW_TAG
 
-      # Download Artifacts for A13 (Only if A13 Build is successful or input is true or empty)
-      - name: Download Artifacts for A13 (Only if A13 Build is successful or skipped)
-        if: ${{ needs.build-kernel-a13.result == 'success' }}
+      # Download Artifacts for A12 (Only if A12 Build is successful or input is true or empty)
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: kernel-artifacts-a13
           path: ./downloaded-artifacts
 
       # Create GitHub Release and upload files if make_release is true
       - name: Create GitHub Release
-        if: ${{ github.event.inputs.make_release == 'true' }}
-        uses: softprops/action-gh-release@v1
+        if: ${{ github.event.inputs.make_release == 'true' }}  # Only run if make_release is true and all build jobs succeeded
+        uses: actions/create-release@v1
         with:
-          files: ./downloaded-artifacts/*
           tag_name: ${{ env.NEW_TAG }}  # Use the generated tag for the release
           prerelease: true  # Mark the release as a pre-release
-          name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
+          release_name: ${{ env.RELEASE_NAME }}  # Pass the RELEASE_NAME to the action
           body: ${{ env.RELEASE_NOTES }}  # Pass the RELEASE_NOTES to the action
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Assets Dynamically
+        run: |
+          # Loop through all files in the downloaded-artifacts directory
+          for file in ./downloaded-artifacts/kernel-*/*; do
+              # Skip directories
+              if [ -d "$file" ]; then
+                  continue
+              fi
+
+              # Upload the file to the GitHub release
+              echo "Uploading $file..."
+              gh release upload ${{ env.NEW_TAG }} "$file"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG: ${{ env.NEW_TAG }}
+
 
       # Display Files Uploaded
       - name: Display Files Uploaded
         run: |
           echo "GitHub release created with the following files:"
-          ls ./downloaded-artifacts
+          ls ./downloaded-artifacts/**/*
