@@ -20,7 +20,6 @@ on:
         default: false
 
 jobs:
-
   build-kernel-a13-5-15:
     uses: ./.github/workflows/build-kernel-a13-5.15.yml
     secrets: inherit
