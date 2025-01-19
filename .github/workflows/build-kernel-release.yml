@@ -6,8 +6,6 @@ permissions:
   
 on:
   #push:
-  #  branches:
-  #    - main  # Trigger on push to the main branch
   workflow_dispatch:
     inputs:
       build_a13:
@@ -22,17 +20,17 @@ on:
         default: false
 
 jobs:
+
   build-kernel-a13-5-15:
     uses: ./.github/workflows/build-kernel-a13-5.15.yml
     secrets: inherit
-    if: ${{ github.event.inputs.build_a13 == 'true' || github.event.inputs.build_a13 == '' }}
+    if: ${{ inputs.build_a13 == 'true' || inputs.build_a13 == '' }}
 
   trigger-release:
     runs-on: ubuntu-latest
-    timeout-minutes: 2160  # Set maximum timeout
     needs:
         - build-kernel-a13-5-15
-    if: ${{ github.event.inputs.make_release == 'true' }}
+    if: ${{ inputs.make_release == 'true' }}
     env:
       REPO_OWNER: TheWildJames
       REPO_NAME: GKI_KernelSU_SUSFS
@@ -107,7 +105,6 @@ jobs:
 
       # Create GitHub Release and upload files if make_release is true
       - name: Create GitHub Release
-        if: ${{ github.event.inputs.make_release == 'true' }}  # Only run if make_release is true and all build jobs succeeded
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.NEW_TAG }}  # Use the generated tag for the release
